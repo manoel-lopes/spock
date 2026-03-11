@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: spock-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerTarget: web
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: "8000"
+      - fromGroup: spock-env
+
+  - type: worker
+    name: spock-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerTarget: worker
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - fromGroup: spock-env
