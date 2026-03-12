@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: pip install --no-cache-dir ".[dev]"
 
+      - name: Run Alembic migrations (ensure schema exists)
+        run: python -m alembic upgrade head
+
       - name: Run E2E tests
         run: python -m pytest tests/e2e/ -v --tb=short --timeout=300
 
