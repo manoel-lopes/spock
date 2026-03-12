@@ -30,6 +30,7 @@ dev = [
     "httpx>=0.28.0",
     "mypy>=1.13.0",
     "ruff>=0.8.0",
+    "autopep8>=2.3.0",
     "sqlalchemy-stubs>=0.4",
 ]
 
@@ -54,3 +55,8 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+
+[tool.autopep8]
+max_line_length = 120
+aggressive = 1
+exclude = "src/spock.egg-info,alembic/versions"

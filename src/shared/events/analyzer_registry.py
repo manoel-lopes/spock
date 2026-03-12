@@ -1,6 +1,8 @@
 import logging
 
-from src.shared.infra.adapters.analysis.ports.transparency_analyzer import TransparencyAnalyzer
+from src.shared.infra.adapters.analysis.ports.transparency_analyzer import (
+    TransparencyAnalyzer,
+)
 
 logger = logging.getLogger(__name__)
 

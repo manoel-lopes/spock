@@ -5,8 +5,12 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.equity.module import register_equity_module
+from src.mortgage.module import register_mortgage_module
 from src.shared.events.event_bus import EventBus
 from src.shared.infra.env.env_service import env_service
+from src.shared.infra.http.routes.health import router as health_router
+from src.shared.workers.tasks.report_analysis import set_event_bus
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,18 +48,13 @@ app.add_middleware(
 event_bus = EventBus()
 
 # Set event bus on the worker module so Celery tasks can publish events
-from src.shared.workers.tasks.report_analysis import set_event_bus
 set_event_bus(event_bus)
 
 # Register modules
-from src.equity.module import register_equity_module
-from src.mortgage.module import register_mortgage_module
-
 register_equity_module(app, event_bus)
 register_mortgage_module(app, event_bus)
 
 # Health route (shared)
-from src.shared.infra.http.routes.health import router as health_router
 app.include_router(health_router)
 
 

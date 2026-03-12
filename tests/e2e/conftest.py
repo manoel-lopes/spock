@@ -28,7 +28,7 @@ _ENGINE_KWARGS = dict(
 )
 
 # Replace app's engine BEFORE importing the app.
-import src.shared.infra.persistence.session as _session_mod
+import src.shared.infra.persistence.session as _session_mod  # noqa: E402  # nopep8
 
 _test_app_engine = create_async_engine(env_service.database_url, **_ENGINE_KWARGS)
 _test_app_session_factory = async_sessionmaker(
