@@ -73,7 +73,7 @@ jobs:
         run: python -m src.shared.infra.persistence.validate_schema
 
       - name: Run Alembic migrations
-        run: alembic upgrade head
+        run: python -m alembic upgrade head
 
       - name: Verify deployment
         run: |
