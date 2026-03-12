@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.infra.env.env_service import env_service
-from src.infra.persistence.models import Base
+from src.shared.infra.env.env_service import env_service
+from src.shared.infra.persistence.models import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", env_service.sync_database_url)

@@ -1,6 +1,6 @@
 import pytest
 
-from src.infra.adapters.pdf.implementations.pymupdf_extractor import PyMuPdfExtractor
+from src.shared.infra.adapters.pdf.implementations.pymupdf_extractor import PyMuPdfExtractor
 
 
 @pytest.mark.asyncio

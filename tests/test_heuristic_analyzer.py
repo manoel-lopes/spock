@@ -1,6 +1,4 @@
-from src.infra.adapters.analysis.implementations.heuristic_transparency_analyzer import (
-    HeuristicTransparencyAnalyzer,
-)
+from src.equity.analyzer import EquityTransparencyAnalyzer
 
 
 def test_analyze_detects_all_metrics():
@@ -12,7 +10,7 @@ def test_analyze_detects_all_metrics():
     A dívida total representa 15% do patrimônio. O comentário gerencial apresenta
     perspectiva positiva para o próximo trimestre.
     """
-    analyzer = HeuristicTransparencyAnalyzer()
+    analyzer = EquityTransparencyAnalyzer()
     result = analyzer.analyze(text)
 
     assert result.quality_score == 1.0
@@ -21,7 +19,7 @@ def test_analyze_detects_all_metrics():
 
 
 def test_analyze_empty_text():
-    analyzer = HeuristicTransparencyAnalyzer()
+    analyzer = EquityTransparencyAnalyzer()
     result = analyzer.analyze("")
 
     assert result.quality_score == 0.0
@@ -30,7 +28,7 @@ def test_analyze_empty_text():
 
 def test_analyze_partial_metrics():
     text = "A vacância física do fundo ficou em 5%. O cap rate é de 8%."
-    analyzer = HeuristicTransparencyAnalyzer()
+    analyzer = EquityTransparencyAnalyzer()
     result = analyzer.analyze(text)
 
     assert result.detected_metrics["vacancia_fisica"] is True
@@ -40,5 +38,5 @@ def test_analyze_partial_metrics():
 
 
 def test_version():
-    analyzer = HeuristicTransparencyAnalyzer()
+    analyzer = EquityTransparencyAnalyzer()
     assert analyzer.get_version() == "1.0.0"

@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from src.domain.enterprise.entities.report import Report
-from src.domain.enterprise.entities.report_analysis import ReportAnalysis
-from src.infra.adapters.scoring.implementations.weighted_transparency_score_calculator import (
+from src.shared.domain.enterprise.entities.report import Report
+from src.shared.domain.enterprise.entities.report_analysis import ReportAnalysis
+from src.shared.infra.adapters.scoring.implementations.weighted_transparency_score_calculator import (
     WeightedTransparencyScoreCalculator,
 )
-from src.infra.adapters.scoring.ports.transparency_score_calculator import TransparencyScoreInput
-from src.infra.env.env import EnvSettings
+from src.shared.infra.adapters.scoring.ports.transparency_score_calculator import TransparencyScoreInput
+from src.shared.infra.env.env import EnvSettings
 
 
 def _make_env() -> EnvSettings:

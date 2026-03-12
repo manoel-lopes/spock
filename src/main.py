@@ -5,8 +5,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import analysis, funds, health, jobs
-from src.infra.env.env_service import env_service
+from src.shared.events.event_bus import EventBus
+from src.shared.infra.env.env_service import env_service
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,7 +22,7 @@ if env_service.sentry_dsn:
 
 app = FastAPI(
     title="Spock — FII Transparency Analysis",
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/docs" if env_service.environment == "development" else None,
     redoc_url=None,
 )
@@ -40,11 +40,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routes
-app.include_router(health.router)
-app.include_router(funds.router)
-app.include_router(analysis.router)
-app.include_router(jobs.router)
+# Event bus
+event_bus = EventBus()
+
+# Set event bus on the worker module so Celery tasks can publish events
+from src.shared.workers.tasks.report_analysis import set_event_bus
+set_event_bus(event_bus)
+
+# Register modules
+from src.equity.module import register_equity_module
+from src.mortgage.module import register_mortgage_module
+
+register_equity_module(app, event_bus)
+register_mortgage_module(app, event_bus)
+
+# Health route (shared)
+from src.shared.infra.http.routes.health import router as health_router
+app.include_router(health_router)
 
 
 if __name__ == "__main__":
