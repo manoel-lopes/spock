@@ -7,9 +7,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir .
+COPY src/ ./src/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
 
-COPY . .
+RUN pip install --no-cache-dir .
 
 # Web
 FROM base AS web
@@ -18,4 +20,4 @@ CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # Worker
 FROM base AS worker
-CMD ["celery", "-A", "src.workers.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+CMD ["celery", "-A", "src.shared.workers.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
