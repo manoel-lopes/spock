@@ -13,11 +13,12 @@ COPY alembic.ini ./
 
 RUN pip install --no-cache-dir .
 
-# Web
+# Combined: uvicorn + celery worker in a single container
 FROM base AS web
 EXPOSE 8000
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY entrypoint.sh ./
+CMD ["./entrypoint.sh"]
 
-# Worker
+# Standalone worker (for paid tier later)
 FROM base AS worker
 CMD ["celery", "-A", "src.shared.workers.celery_app", "worker", "--loglevel=info", "--concurrency=2"]

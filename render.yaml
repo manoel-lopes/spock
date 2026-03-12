@@ -11,14 +11,3 @@ services:
       - key: PORT
         value: "8000"
       - fromGroup: spock-env
-
-  - type: worker
-    name: spock-worker
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    dockerTarget: worker
-    envVars:
-      - key: ENVIRONMENT
-        value: production
-      - fromGroup: spock-env
