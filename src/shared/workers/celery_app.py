@@ -26,3 +26,15 @@ celery_app.conf.update(
 )
 
 import src.shared.workers.tasks.report_analysis  # noqa: F401, E402
+
+# Register analyzers so Celery worker can process both fund types
+from src.shared.events.analyzer_registry import register_analyzer, register_content_validator  # noqa: E402
+from src.equity.analyzer import EquityTransparencyAnalyzer  # noqa: E402
+from src.equity.content_validator import EquityContentValidator  # noqa: E402
+from src.mortgage.analyzer import MortgageTransparencyAnalyzer  # noqa: E402
+from src.mortgage.content_validator import MortgageContentValidator  # noqa: E402
+
+register_analyzer("equity", EquityTransparencyAnalyzer())
+register_content_validator("equity", EquityContentValidator())
+register_analyzer("mortgage", MortgageTransparencyAnalyzer())
+register_content_validator("mortgage", MortgageContentValidator())
