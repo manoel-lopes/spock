@@ -12,6 +12,6 @@ celery -A src.shared.workers.celery_app worker \
   --pool=solo \
   --concurrency=1 &
 
-# Start uvicorn in foreground
+# Start uvicorn in foreground (exec replaces shell for proper signal handling)
 echo "Starting uvicorn..."
-uvicorn src.main:app --host 0.0.0.0 --port "${PORT:-8000}"
+exec uvicorn src.main:app --host 0.0.0.0 --port "${PORT:-8000}"

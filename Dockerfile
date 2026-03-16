@@ -13,12 +13,12 @@ COPY alembic.ini ./
 
 RUN pip install --no-cache-dir .
 
-# Combined: uvicorn + celery worker in a single container
+# Standalone worker (for paid tier later)
+FROM base AS worker
+CMD ["celery", "-A", "src.shared.workers.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+
+# Combined: uvicorn + celery worker in a single container (default/last stage)
 FROM base AS web
 EXPOSE 8000
 COPY entrypoint.sh ./
 CMD ["./entrypoint.sh"]
-
-# Standalone worker (for paid tier later)
-FROM base AS worker
-CMD ["celery", "-A", "src.shared.workers.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
