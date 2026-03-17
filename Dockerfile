@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS base
+FROM python:3.12-slim
 
 WORKDIR /app
 
@@ -13,12 +13,6 @@ COPY alembic.ini ./
 
 RUN pip install --no-cache-dir .
 
-# Standalone worker (for paid tier later)
-FROM base AS worker
-CMD ["celery", "-A", "src.shared.workers.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
-
-# Combined: uvicorn + celery worker in a single container (default/last stage)
-FROM base AS web
 EXPOSE 8000
 COPY entrypoint.sh ./
 CMD ["./entrypoint.sh"]

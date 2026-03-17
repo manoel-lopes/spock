@@ -42,7 +42,7 @@ class WeightedTransparencyScoreCalculator(TransparencyScoreCalculator):
             timeliness=timeliness_score,
             quality=quality,
             final_score=final_score,
-            classification="",
+            classification=self._classify(final_score),
             metadata=TransparencyScoreMetadata(
                 report_count=len(completed_reports),
                 expected_reports=expected_reports,
@@ -86,6 +86,16 @@ class WeightedTransparencyScoreCalculator(TransparencyScoreCalculator):
 
         avg_quality_score = sum(a.quality_score for a in matched) / len(matched)
         return avg_quality_score, avg_quality_score
+
+    @staticmethod
+    def _classify(final_score: float) -> str:
+        if final_score >= 0.80:
+            return "A"
+        if final_score >= 0.60:
+            return "B"
+        if final_score >= 0.40:
+            return "C"
+        return "D"
 
     def _months_diff(self, start, end) -> int:
         return (end.year - start.year) * 12 + (end.month - start.month)

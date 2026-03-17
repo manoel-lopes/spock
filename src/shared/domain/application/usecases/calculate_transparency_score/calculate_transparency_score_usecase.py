@@ -2,6 +2,9 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 
+from dateutil.relativedelta import relativedelta
+
+from src.shared.core.domain.application.pagination_params import PaginationParams
 from src.shared.domain.application.repositories.funds_repository import FundsRepository
 from src.shared.domain.application.repositories.report_analyses_repository import ReportAnalysesRepository
 from src.shared.domain.application.repositories.reports_repository import ReportsRepository
@@ -91,6 +94,10 @@ class CalculateTransparencyScoreUseCase:
 
         algorithm_version = self._env_service.analysis_algorithm_version
 
+        classification = result.classification
+        if classification == "C":
+            classification = await self._apply_degradation(fund.id, classification)
+
         score = await self._transparency_scores_repository.create(
             fund_id=fund.id,
             period_start=period_start,
@@ -99,7 +106,7 @@ class CalculateTransparencyScoreUseCase:
             timeliness=result.timeliness,
             quality=result.quality,
             final_score=result.final_score,
-            classification=result.classification,
+            classification=classification,
             algorithm_version=algorithm_version,
             metadata={
                 "reportCount": result.metadata.report_count,
@@ -110,3 +117,21 @@ class CalculateTransparencyScoreUseCase:
         )
 
         return CalculateTransparencyScoreResponse(score=score)
+
+    async def _apply_degradation(self, fund_id: str, classification: str) -> str:
+        history = await self._transparency_scores_repository.find_history_by_fund_id(
+            fund_id, PaginationParams(page=1, page_size=100, order="desc")
+        )
+        if not history.items:
+            return classification
+
+        first_c_date = None
+        for score in history.items:
+            if score.classification in ("A", "B"):
+                break
+            if score.classification in ("C", "D"):
+                first_c_date = score.created_at
+
+        if first_c_date and datetime.now() >= first_c_date + relativedelta(months=9):
+            return "D"
+        return classification

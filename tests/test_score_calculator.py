@@ -15,6 +15,7 @@ def _make_env() -> EnvSettings:
         scoring_weight_timeliness=0.3,
         scoring_weight_quality=0.3,
         scoring_timeliness_limit_days=30,
+        _env_file=None,
     )
 
 
@@ -32,7 +33,7 @@ def test_calculate_with_no_reports():
     assert result.timeliness == 0.0
     assert result.quality == 0.0
     assert result.final_score == 0.0
-    assert result.classification == "Muito Baixa"
+    assert result.classification == "D"
 
 
 def test_calculate_with_completed_reports():
@@ -122,4 +123,4 @@ def test_classification_thresholds():
         )
     )
 
-    assert result.classification == "Excelente"
+    assert result.classification == "A"

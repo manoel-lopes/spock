@@ -10,7 +10,7 @@ _NON_REPORT_KEYWORDS = [
 class EquityContentValidator(ContentValidator):
     def validate(self, text: str, page_count: int) -> None:
         """Reject documents that are not actual management reports."""
-        from src.shared.workers.tasks.report_analysis import PermanentFailure
+        from src.shared.domain.application.services.report_processor import PermanentFailure
 
         lower = text.lower()
         if page_count <= 2:

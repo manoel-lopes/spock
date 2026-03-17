@@ -2,7 +2,6 @@
 E2E test fixtures.
 
 Uses the real FastAPI app with:
-- Real production Redis (Upstash) for cache testing
 - NullPool engine to avoid asyncpg connection conflicts in same event loop
 - Dedicated SQLAlchemy session for test data setup/teardown
 - Real API key auth
@@ -12,7 +11,6 @@ import uuid
 from collections.abc import AsyncGenerator
 
 import pytest
-import redis.asyncio as aioredis
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from src.shared.infra.env.env_service import env_service
@@ -50,7 +48,6 @@ _session_mod.get_session = _patched_get_session
 
 # Now import the app (which uses the patched session module)
 from src.main import app  # noqa: E402
-from src.shared.infra.cache import redis_cache  # noqa: E402
 
 API_KEY = env_service.api_key_list[0] if env_service.api_key_list else "test-key"
 
@@ -73,22 +70,6 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         yield c
-
-
-@pytest.fixture
-async def redis_client() -> AsyncGenerator[aioredis.Redis, None]:
-    r = aioredis.from_url(env_service.redis_url, decode_responses=True)
-    yield r
-    await r.aclose()
-
-
-@pytest.fixture(autouse=True)
-async def flush_cache_before_test(redis_client: aioredis.Redis):
-    """Flush all cache keys before each test to ensure isolation."""
-    await redis_client.flushdb()
-    redis_cache._pool = None
-    yield
-    await redis_client.flushdb()
 
 
 @pytest.fixture

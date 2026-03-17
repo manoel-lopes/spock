@@ -14,13 +14,6 @@ class EnvSettings(BaseSettings):
     db_password: str = "postgres"
     db_name: str = "spock"
 
-    # Redis
-    redis_host: str = "localhost"
-    redis_port: int = 6379
-    redis_password: str = ""
-    redis_db: int = 0
-    redis_tls: str = ""
-
     # Proxy
     proxy_url: str = ""
     proxy_secret: str = ""
@@ -63,15 +56,6 @@ class EnvSettings(BaseSettings):
         base = f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
         if self._requires_ssl:
             return f"{base}?sslmode=require"
-        return base
-
-    @property
-    def redis_url(self) -> str:
-        scheme = "rediss" if self.redis_tls else "redis"
-        auth = f":{self.redis_password}@" if self.redis_password else ""
-        base = f"{scheme}://{auth}{self.redis_host}:{self.redis_port}/{self.redis_db}"
-        if self.redis_tls:
-            return f"{base}?ssl_cert_reqs=none"
         return base
 
     @property

@@ -13,7 +13,6 @@ async def test_health_returns_ok(client: AsyncClient):
     assert data["status"] in ("ok", "degraded")
     assert "timestamp" in data
     assert "db" in data
-    assert "cache" in data
 
 
 @pytest.mark.asyncio
@@ -21,10 +20,3 @@ async def test_health_db_is_up(client: AsyncClient):
     response = await client.get("/health")
     data = response.json()
     assert data["db"]["status"] == "up"
-
-
-@pytest.mark.asyncio
-async def test_health_cache_is_up(client: AsyncClient):
-    response = await client.get("/health")
-    data = response.json()
-    assert data["cache"]["status"] == "up"

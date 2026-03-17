@@ -7,10 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.equity.module import register_equity_module
 from src.mortgage.module import register_mortgage_module
-from src.shared.events.event_bus import EventBus
 from src.shared.infra.env.env_service import env_service
 from src.shared.infra.http.routes.health import router as health_router
-from src.shared.workers.tasks.report_analysis import set_event_bus
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,7 +24,7 @@ if env_service.sentry_dsn:
 
 app = FastAPI(
     title="Spock — FII Transparency Analysis",
-    version="2.0.0",
+    version="3.0.0",
     docs_url="/docs" if env_service.environment == "development" else None,
     redoc_url=None,
 )
@@ -44,15 +42,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Event bus
-event_bus = EventBus()
-
-# Set event bus on the worker module so Celery tasks can publish events
-set_event_bus(event_bus)
-
 # Register modules
-register_equity_module(app, event_bus)
-register_mortgage_module(app, event_bus)
+register_equity_module(app)
+register_mortgage_module(app)
 
 # Health route (shared)
 app.include_router(health_router)

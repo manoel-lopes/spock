@@ -1,10 +1,9 @@
-"""E2E tests for mortgage module endpoints with Redis caching."""
+"""E2E tests for mortgage module endpoints."""
 
 import uuid
 from datetime import datetime
 
 import pytest
-import redis.asyncio as aioredis
 from httpx import AsyncClient
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -111,25 +110,6 @@ async def test_mortgage_get_transparency(
 
 
 @pytest.mark.asyncio
-async def test_mortgage_transparency_uses_separate_cache_namespace(
-    client: AsyncClient,
-    auth_headers: dict,
-    seed_mortgage_fund_with_score: dict,
-    redis_client: aioredis.Redis,
-):
-    ticker = seed_mortgage_fund_with_score["ticker"]
-
-    await client.get(f"/mortgage/funds/{ticker}/transparency", headers=auth_headers)
-
-    # Cache key should use "mortgage:" prefix, not "equity:"
-    mortgage_key = f"mortgage:transparency:{ticker.lower()}"
-    equity_key = f"equity:transparency:{ticker.lower()}"
-
-    assert await redis_client.get(mortgage_key) is not None
-    assert await redis_client.get(equity_key) is None
-
-
-@pytest.mark.asyncio
 async def test_mortgage_get_transparency_history(
     client: AsyncClient,
     auth_headers: dict,
@@ -165,46 +145,6 @@ async def test_mortgage_get_report(
     assert data["report"]["status"] == "completed"
     assert data["analysis"]["algorithm_version"] == "1.0.0-mortgage"
     assert data["analysis"]["detected_metrics"]["cri_ratings"] is True
-
-
-@pytest.mark.asyncio
-async def test_mortgage_report_cached_separately(
-    client: AsyncClient,
-    auth_headers: dict,
-    seed_mortgage_fund_with_report: dict,
-    redis_client: aioredis.Redis,
-):
-    report_id = seed_mortgage_fund_with_report["report_id"]
-
-    await client.get(f"/mortgage/reports/{report_id}", headers=auth_headers)
-
-    mortgage_key = f"mortgage:report:{report_id}"
-    equity_key = f"equity:report:{report_id}"
-
-    assert await redis_client.get(mortgage_key) is not None
-    assert await redis_client.get(equity_key) is None
-
-
-@pytest.mark.asyncio
-async def test_mortgage_submit_analysis_creates_job(
-    client: AsyncClient,
-    auth_headers: dict,
-    seed_mortgage_fund: dict,
-):
-    ticker = seed_mortgage_fund["ticker"]
-    response = await client.post(
-        "/mortgage/reports/analyze",
-        headers=auth_headers,
-        json={
-            "ticker": ticker,
-            "pdf_url": "https://example.com/mortgage.pdf",
-            "reference_month": "2025-08-01T00:00:00",
-        },
-    )
-    assert response.status_code == 202
-    data = response.json()
-    assert "jobId" in data
-    assert "reportId" in data
 
 
 @pytest.mark.asyncio
