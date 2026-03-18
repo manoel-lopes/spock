@@ -22,7 +22,6 @@ from src.shared.infra.env.env import EnvSettings
 
 logger = logging.getLogger(__name__)
 
-TIMEOUT_SAFETY_SECONDS = 25
 
 
 @dataclass
@@ -130,7 +129,7 @@ class DiscoverAndAnalyzeUseCase:
                 break
 
             elapsed = time.monotonic() - start_time
-            if elapsed > TIMEOUT_SAFETY_SECONDS:
+            if elapsed > self._env.timeout_safety_seconds:
                 logger.warning("Approaching timeout (%.1fs), stopping early", elapsed)
                 break
 

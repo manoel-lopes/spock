@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 
+from src.shared.infra.adapters.analysis.implementations.llm_transparency_analyzer import (
+    LlmTransparencyAnalyzer,
+)
 from src.shared.infra.adapters.analysis.ports.transparency_analyzer import (
     AnalysisResult,
     TransparencyAnalyzer,
@@ -50,3 +53,21 @@ class EquityTransparencyAnalyzer(TransparencyAnalyzer):
 
     def get_version(self) -> str:
         return ALGORITHM_VERSION
+
+
+class EquityLlmAnalyzer(LlmTransparencyAnalyzer):
+    def __init__(self, api_key: str, model: str) -> None:
+        from src.shared.infra.adapters.analysis.implementations.llm_transparency_analyzer import (
+            MetricDefinition as LlmMetricDefinition,
+        )
+
+        llm_metrics = [
+            LlmMetricDefinition(key=m.key, keywords=m.keywords)
+            for m in EQUITY_METRICS
+        ]
+        super().__init__(
+            metrics=llm_metrics,
+            api_key=api_key,
+            model=model,
+            fallback_analyzer=EquityTransparencyAnalyzer(),
+        )

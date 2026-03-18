@@ -23,8 +23,15 @@ class EnvSettings(BaseSettings):
     investidor10_timeout_ms: int = 30000
 
     # Analysis
-    analysis_algorithm_version: str = "1.0.0"
+    analysis_algorithm_version: str = "2.0.0-llm"
+
+    # Gemini
+    gemini_api_key: str = ""
+    analysis_model: str = "gemini-2.0-flash"
     analysis_rolling_window_months: int = 12
+
+    # Timeout
+    timeout_safety_seconds: int = 55
 
     # Scoring
     scoring_weight_regularity: float = 0.4
