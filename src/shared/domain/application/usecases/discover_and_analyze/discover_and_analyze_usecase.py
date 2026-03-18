@@ -167,13 +167,6 @@ class DiscoverAndAnalyzeUseCase:
             except Exception as e:
                 await self._session.rollback()
                 logger.warning("Failed to process report for %s: %s", ticker, e)
-                if existing_report:
-                    try:
-                        await self._reports_repo.update_status(
-                            existing_report.id, "failed", str(e)
-                        )
-                    except Exception:
-                        pass
                 failed += 1
                 processed_this_call += 1
 

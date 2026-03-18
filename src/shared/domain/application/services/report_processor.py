@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import hashlib
 import logging
@@ -82,7 +83,8 @@ class ReportProcessor:
             return ProcessReportResult(report=report, analysis=existing_analysis, cached=True)
 
         await self._reports_repo.update_status(report.id, "analyzing")
-        result = analyzer.analyze(text)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(_executor, analyzer.analyze, text)
 
         analysis = await self._analyses_repo.create(
             report_id=report.id,

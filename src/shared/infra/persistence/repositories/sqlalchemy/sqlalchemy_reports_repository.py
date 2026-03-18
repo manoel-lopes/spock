@@ -35,7 +35,6 @@ class SqlAlchemyReportsRepository(ReportsRepository):
         )
         self._session.add(model)
         await self._session.commit()
-        await self._session.refresh(model)
         return ReportMapper.to_domain(model)
 
     async def find_by_id(self, report_id: str) -> Report | None:
@@ -88,7 +87,6 @@ class SqlAlchemyReportsRepository(ReportsRepository):
         model.status = status
         model.error_message = error_message
         await self._session.commit()
-        await self._session.refresh(model)
         return ReportMapper.to_domain(model)
 
     async def update_pdf_hash(self, report_id: str, pdf_hash: str) -> Report:
@@ -97,5 +95,4 @@ class SqlAlchemyReportsRepository(ReportsRepository):
             raise ValueError(f"Report {report_id} not found")
         model.pdf_hash = pdf_hash
         await self._session.commit()
-        await self._session.refresh(model)
         return ReportMapper.to_domain(model)
