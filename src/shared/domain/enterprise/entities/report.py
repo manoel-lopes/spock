@@ -11,3 +11,4 @@ class Report(Entity):
     pdf_hash: str | None = None
     status: str = "pending"
     error_message: str | None = None
+    retry_count: int = 0

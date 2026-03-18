@@ -89,6 +89,14 @@ class SqlAlchemyReportsRepository(ReportsRepository):
         await self._session.commit()
         return ReportMapper.to_domain(model)
 
+    async def increment_retry_count(self, report_id: str) -> Report:
+        model = await self._session.get(ReportModel, report_id)
+        if not model:
+            raise ValueError(f"Report {report_id} not found")
+        model.retry_count += 1
+        await self._session.commit()
+        return ReportMapper.to_domain(model)
+
     async def update_pdf_hash(self, report_id: str, pdf_hash: str) -> Report:
         model = await self._session.get(ReportModel, report_id)
         if not model:

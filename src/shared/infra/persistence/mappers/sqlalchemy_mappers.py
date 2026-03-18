@@ -45,6 +45,7 @@ class ReportMapper:
             pdf_hash=model.pdf_hash,
             status=model.status,
             error_message=model.error_message,
+            retry_count=model.retry_count,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )

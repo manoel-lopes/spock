@@ -123,8 +123,12 @@ class DiscoverAndAnalyzeUseCase:
                 continue
 
             if existing_report and existing_report.status == "failed":
-                failed += 1
-                continue
+                is_permanent = existing_report.error_message and not existing_report.error_message.startswith("transient:")
+                if is_permanent or existing_report.retry_count >= 3:
+                    failed += 1
+                    continue
+                # Transient failure with retries left — reset for retry
+                await self._reports_repo.update_status(existing_report.id, "pending")
 
             # Reset stuck reports (from crashed/timed-out previous calls) for clean retry
             if existing_report and existing_report.status in ("downloading", "extracting", "analyzing"):
@@ -172,6 +176,14 @@ class DiscoverAndAnalyzeUseCase:
             except Exception as e:
                 await self._session.rollback()
                 logger.warning("Failed to process report for %s: %s", ticker, e)
+                if existing_report:
+                    try:
+                        await self._reports_repo.increment_retry_count(existing_report.id)
+                        await self._reports_repo.update_status(
+                            existing_report.id, "failed", f"transient: {e}"
+                        )
+                    except Exception:
+                        logger.error("Could not update failed report %s", existing_report.id)
                 failed += 1
                 processed_this_call += 1
 
