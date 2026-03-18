@@ -123,7 +123,7 @@ class DiscoverAndAnalyzeUseCase:
                 continue
 
             # Reset stuck reports (from crashed/timed-out previous calls) for clean retry
-            if existing_report and existing_report.status in ("downloading", "extracting", "analyzing"):
+            if existing_report and existing_report.status in ("downloading", "extracting", "analyzing", "failed"):
                 await self._reports_repo.update_status(existing_report.id, "pending")
 
             if processed_this_call >= req.max_reports:
@@ -168,6 +168,13 @@ class DiscoverAndAnalyzeUseCase:
             except Exception as e:
                 await self._session.rollback()
                 logger.warning("Failed to process report for %s: %s", ticker, e)
+                if existing_report:
+                    try:
+                        await self._reports_repo.update_status(
+                            existing_report.id, "failed", str(e)
+                        )
+                    except Exception:
+                        pass
                 failed += 1
                 processed_this_call += 1
 

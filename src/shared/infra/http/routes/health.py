@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy import text
 
+from src.shared.infra.auth.guards.api_key_auth import require_api_key
 from src.shared.infra.persistence.session import async_session_factory
 
 router = APIRouter(tags=["Health"])
@@ -19,6 +20,21 @@ async def health_check():
         "timestamp": datetime.now(UTC).isoformat(),
         "db": db_status,
     }
+
+
+@router.delete("/admin/reset-data", dependencies=[Depends(require_api_key)])
+async def reset_data():
+    async with async_session_factory() as session:
+        async with session.begin():
+            for table in [
+                "report_sources",
+                "report_analyses",
+                "report_contents",
+                "transparency_scores",
+                "reports",
+            ]:
+                await session.execute(text(f"TRUNCATE TABLE {table} CASCADE"))
+    return {"status": "ok", "message": "All report data truncated"}
 
 
 async def _check_database() -> dict:
