@@ -22,7 +22,7 @@ from src.shared.infra.env.env import EnvSettings
 
 logger = logging.getLogger(__name__)
 
-TIMEOUT_SAFETY_SECONDS = 75
+TIMEOUT_SAFETY_SECONDS = 25
 
 
 @dataclass
