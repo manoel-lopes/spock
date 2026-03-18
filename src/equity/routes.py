@@ -43,7 +43,7 @@ class DiscoverBody(BaseModel):
 async def discover_fund_reports(
     ticker: str,
     body: DiscoverBody | None = None,
-    max_reports: int = Query(default=12, ge=1, le=24, alias="maxReports"),
+    max_reports: int = Query(default=4, ge=1, le=24, alias="maxReports"),
     usecase: DiscoverAndAnalyzeUseCase = Depends(get_discover_and_analyze_usecase),
 ):
     try:

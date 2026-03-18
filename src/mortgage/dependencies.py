@@ -44,6 +44,7 @@ from src.shared.infra.persistence.session import get_session
 
 # --- Repositories ---
 
+
 async def get_funds_repository(
     session: AsyncSession = Depends(get_session),
 ) -> SqlAlchemyFundsRepository:
@@ -76,6 +77,7 @@ async def get_transparency_scores_repository(
 
 # --- Adapters ---
 
+
 def get_report_collector() -> HttpReportCollector:
     return HttpReportCollector(env_service)
 
@@ -86,6 +88,7 @@ def get_score_calculator() -> WeightedTransparencyScoreCalculator:
 
 # --- Services ---
 
+
 async def get_report_processor(
     reports_repo: SqlAlchemyReportsRepository = Depends(get_reports_repository),
     contents_repo: SqlAlchemyReportContentsRepository = Depends(get_report_contents_repository),
@@ -95,6 +98,7 @@ async def get_report_processor(
 
 
 # --- Use Cases ---
+
 
 async def get_discover_and_analyze_usecase(
     session: AsyncSession = Depends(get_session),
@@ -108,8 +112,16 @@ async def get_discover_and_analyze_usecase(
     calculator: WeightedTransparencyScoreCalculator = Depends(get_score_calculator),
 ) -> DiscoverAndAnalyzeUseCase:
     return DiscoverAndAnalyzeUseCase(
-        funds_repo, reports_repo, contents_repo, analyses_repo, scores_repo,
-        report_collector, report_processor, calculator, env_service, session,
+        funds_repo,
+        reports_repo,
+        contents_repo,
+        analyses_repo,
+        scores_repo,
+        report_collector,
+        report_processor,
+        calculator,
+        env_service,
+        session,
     )
 
 
@@ -143,5 +155,10 @@ async def get_calculate_transparency_score_usecase(
     calculator: WeightedTransparencyScoreCalculator = Depends(get_score_calculator),
 ) -> CalculateTransparencyScoreUseCase:
     return CalculateTransparencyScoreUseCase(
-        funds_repo, reports_repo, analyses_repo, scores_repo, calculator, env_service,
+        funds_repo,
+        reports_repo,
+        analyses_repo,
+        scores_repo,
+        calculator,
+        env_service,
     )
