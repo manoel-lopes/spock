@@ -13,14 +13,16 @@ from src.shared.infra.adapters.analysis.ports.transparency_analyzer import (
 
 logger = logging.getLogger(__name__)
 
-TEXT_TRUNCATE_LIMIT = 4000
-ALGORITHM_VERSION = "2.0.0-llm"
+TEXT_TRUNCATE_LIMIT = 100_000
+ALGORITHM_VERSION = "3.0.0-llm"
 
 
 @dataclass
 class MetricDefinition:
     key: str
     keywords: list[str]
+    description: str = ""
+    scoring_rubric: str = ""
 
 
 class LlmTransparencyAnalyzer(TransparencyAnalyzer):
@@ -30,11 +32,13 @@ class LlmTransparencyAnalyzer(TransparencyAnalyzer):
         api_key: str,
         model: str,
         fallback_analyzer: TransparencyAnalyzer,
+        fund_type_label: str = "FII",
     ) -> None:
         self._metrics = metrics
         self._model = model
         self._fallback = fallback_analyzer
         self._client = genai.Client(api_key=api_key)
+        self._system_prompt = self._build_system_prompt(fund_type_label)
 
     def analyze(self, text: str) -> AnalysisResult:
         try:
@@ -45,44 +49,56 @@ class LlmTransparencyAnalyzer(TransparencyAnalyzer):
 
     def _analyze_with_llm(self, text: str) -> AnalysisResult:
         truncated = text[:TEXT_TRUNCATE_LIMIT]
-        prompt = self._build_prompt(truncated)
+        user_prompt = self._build_user_prompt(truncated)
 
         response = self._client.models.generate_content(
             model=self._model,
-            contents=prompt,
+            contents=user_prompt,
             config={
+                "system_instruction": self._system_prompt,
                 "response_mime_type": "application/json",
                 "temperature": 0.1,
-                "http_options": {"timeout": 15_000},
+                "http_options": {"timeout": 30_000},
             },
         )
 
         raw = json.loads(response.text)
         return self._parse_response(raw)
 
-    def _build_prompt(self, text: str) -> str:
-        metric_lines = []
+    def _build_system_prompt(self, fund_type_label: str) -> str:
+        metric_sections = []
         for m in self._metrics:
             hints = ", ".join(m.keywords)
-            metric_lines.append(f'- "{m.key}": keywords hint: [{hints}]')
+            section = f'### {m.key} — Keywords: [{hints}]'
+            if m.description:
+                section += f"\n{m.description}"
+            if m.scoring_rubric:
+                section += f"\n**Scoring guidance:**\n{m.scoring_rubric}"
+            metric_sections.append(section)
 
-        metrics_block = "\n".join(metric_lines)
+        metrics_block = "\n\n".join(metric_sections)
 
-        return f"""You are an analyst evaluating a Brazilian FII (Fundo de Investimento Imobiliário) monthly report.
+        return f"""You are a senior analyst specializing in Brazilian FIIs (Fundos de Investimento Imobiliário).
+You are evaluating a {fund_type_label} fund's monthly report ("relatório gerencial").
 
-For each metric below, determine whether the report text **meaningfully discusses** that metric (not just mentions a keyword in passing). Return a confidence score from 0.0 to 1.0 where:
-- 0.0 = metric is completely absent
-- 0.3 = metric is briefly mentioned without substance
-- 0.7 = metric is discussed with some data or context
-- 1.0 = metric is thoroughly covered with detailed data
+## Scoring Scale
+- 0.0: Completely absent — no mention whatsoever
+- 0.3: Mentioned in passing or section title only, no substantive data
+- 0.7: Discussed with specific data points, percentages, or quantitative context
+- 1.0: Thoroughly covered with detailed breakdowns, time-series, or stratified data
 
-Metrics to evaluate:
+## Metrics to Evaluate
+
 {metrics_block}
 
+## Output Format
 Return JSON with this exact structure:
 {{"metrics": {{"metric_key": {{"detected": true/false, "confidence": 0.0}}}}}}
 
-Set "detected" to true if confidence >= 0.3.
+Set "detected" to true if confidence >= 0.3."""
+
+    def _build_user_prompt(self, text: str) -> str:
+        return f"""Analyze the following monthly report text and evaluate each metric according to the scoring scale.
 
 Report text:
 \"\"\"

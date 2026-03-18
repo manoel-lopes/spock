@@ -1,12 +1,12 @@
 #!/bin/bash
-BASE_URL="https://spock-python-api.onrender.com"
+BASE_URL="http://localhost:8000"
 API_KEY="spock-prod-api-key-2026"
 RESULTS_FILE="/root/www/projects/back/python/spock/results.log"
 MAX_REPORTS=4
 MAX_PASSES=16
 PARALLEL=5
 
-echo "ticker,type,pass,discovered,analyzed,cached,failed,remaining,score,http_code" > "$RESULTS_FILE"
+echo "ticker,type,pass,discovered,analyzed,cached,failed,remaining,score,classification,http_code" > "$RESULTS_FILE"
 
 process_ticker() {
     local type=$1
@@ -28,11 +28,11 @@ process_ticker() {
             vals=$(echo "$body" | python3 -c "
 import sys,json
 d=json.load(sys.stdin)
-print(d['discovered'],d['analyzed'],d['cached'],d['failed'],d['remaining'],d['score'])
+print(d['discovered'],d['analyzed'],d['cached'],d['failed'],d['remaining'],d['score'],d.get('classification'))
 " 2>/dev/null)
-            read -r discovered analyzed cached failed remaining score <<< "$vals"
-            echo "${ticker},${type},${pass},${discovered},${analyzed},${cached},${failed},${remaining},${score},${http_code}" >> "$RESULTS_FILE"
-            echo "[$(date +%H:%M:%S)] ${type}/${ticker} p${pass}: d=${discovered} a=${analyzed} c=${cached} f=${failed} r=${remaining} s=${score}" >&2
+            read -r discovered analyzed cached failed remaining score classification <<< "$vals"
+            echo "${ticker},${type},${pass},${discovered},${analyzed},${cached},${failed},${remaining},${score},${classification},${http_code}" >> "$RESULTS_FILE"
+            echo "[$(date +%H:%M:%S)] ${type}/${ticker} p${pass}: d=${discovered} a=${analyzed} c=${cached} f=${failed} r=${remaining} s=${score} cl=${classification}" >&2
 
             if [ "$remaining" = "0" ]; then
                 return 0

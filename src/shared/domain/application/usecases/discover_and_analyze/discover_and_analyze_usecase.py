@@ -40,6 +40,7 @@ class DiscoverAndAnalyzeResponse:
     failed: int
     remaining: int
     score: float | None = None
+    classification: str | None = None
 
 
 class DiscoverAndAnalyzeUseCase:
@@ -121,8 +122,12 @@ class DiscoverAndAnalyzeUseCase:
                 cached += 1
                 continue
 
+            if existing_report and existing_report.status == "failed":
+                failed += 1
+                continue
+
             # Reset stuck reports (from crashed/timed-out previous calls) for clean retry
-            if existing_report and existing_report.status in ("downloading", "extracting", "analyzing", "failed"):
+            if existing_report and existing_report.status in ("downloading", "extracting", "analyzing"):
                 await self._reports_repo.update_status(existing_report.id, "pending")
 
             if processed_this_call >= req.max_reports:
@@ -175,8 +180,11 @@ class DiscoverAndAnalyzeUseCase:
             remaining = 0
 
         score = None
+        classification = None
         if remaining == 0 and (analyzed > 0 or cached > 0):
-            score = await self._calculate_score(fund.id, reference_date, rolling_window)
+            result = await self._calculate_score(fund.id, reference_date, rolling_window)
+            if result is not None:
+                score, classification = result
 
         return DiscoverAndAnalyzeResponse(
             discovered=discovered,
@@ -185,11 +193,12 @@ class DiscoverAndAnalyzeUseCase:
             failed=failed,
             remaining=remaining,
             score=score,
+            classification=classification,
         )
 
     async def _calculate_score(
         self, fund_id: str, reference_date: datetime, rolling_window: int,
-    ) -> float | None:
+    ) -> tuple[float, str] | None:
         try:
             period_end = reference_date
             period_start = self._rolling_window_start(period_end, rolling_window)
@@ -235,7 +244,7 @@ class DiscoverAndAnalyzeUseCase:
                 },
             )
 
-            return result.final_score
+            return (result.final_score, classification)
         except Exception as e:
             logger.warning("Scoring failed for fund %s: %s", fund_id, e)
             return None

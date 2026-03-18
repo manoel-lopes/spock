@@ -62,6 +62,7 @@ async def discover_fund_reports(
             "failed": result.failed,
             "remaining": result.remaining,
             "score": result.score,
+            "classification": result.classification,
         }
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e

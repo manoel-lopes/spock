@@ -22,6 +22,10 @@ class EnvSettings(BaseSettings):
     investidor10_base_url: str = "https://investidor10.com.br"
     investidor10_timeout_ms: int = 30000
 
+    # Alfred (FI-Infra fallback)
+    alfred_base_url: str = ""
+    alfred_api_key: str = ""
+
     # Analysis
     analysis_algorithm_version: str = "2.0.0-llm"
 
@@ -71,4 +75,4 @@ class EnvSettings(BaseSettings):
             return []
         return [k.strip() for k in self.api_keys.split(",") if k.strip()]
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}

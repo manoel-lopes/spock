@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import logging
 import re
 from urllib.parse import quote
 
@@ -12,6 +13,8 @@ from src.shared.infra.adapters.collectors.ports.report_collector import (
 )
 from src.shared.infra.env.env import EnvSettings
 
+logger = logging.getLogger(__name__)
+
 
 class HttpReportCollector(ReportCollector):
     def __init__(self, env_service: EnvSettings) -> None:
@@ -19,6 +22,8 @@ class HttpReportCollector(ReportCollector):
         self._proxy_secret = env_service.proxy_secret
         self._base_url = env_service.investidor10_base_url
         self._timeout_ms = env_service.investidor10_timeout_ms
+        self._alfred_base_url = env_service.alfred_base_url
+        self._alfred_api_key = env_service.alfred_api_key
 
     async def list_communications(self, ticker: str) -> list[CommunicationItem]:
         all_items: list[CommunicationItem] = []
@@ -34,9 +39,31 @@ class HttpReportCollector(ReportCollector):
             all_items.extend(items)
             await asyncio.sleep(0.3)
 
+        if not all_items and self._alfred_base_url:
+            logger.info("No Investidor10 results for %s, falling back to Alfred", ticker)
+            all_items = await self._fetch_from_alfred(ticker)
+
         return all_items
 
+    async def _fetch_from_alfred(self, ticker: str) -> list[CommunicationItem]:
+        url = f"{self._alfred_base_url}/tickers/{ticker.upper()}/documents"
+        headers = {"x-api-key": self._alfred_api_key}
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, headers=headers, timeout=30.0)
+                response.raise_for_status()
+            data = response.json()
+            return [
+                CommunicationItem(type=doc["type"], date=doc["date"], link_url=doc["link_url"])
+                for doc in data.get("documents", [])
+            ]
+        except Exception as e:
+            logger.warning("Alfred fallback failed for %s: %s", ticker, e)
+            return []
+
     async def resolve_pdf_url(self, link_url: str) -> str:
+        if not link_url.startswith(self._base_url):
+            return link_url
         html = await self._fetch_via_proxy(link_url)
         match = re.search(r'window\.location\.href\s*=\s*"([^"]+)"', html)
         if not match:
