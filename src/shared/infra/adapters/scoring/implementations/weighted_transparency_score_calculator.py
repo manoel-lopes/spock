@@ -89,9 +89,9 @@ class WeightedTransparencyScoreCalculator(TransparencyScoreCalculator):
 
     @staticmethod
     def _classify(final_score: float) -> str:
-        if final_score >= 0.80:
+        if final_score >= 0.85:
             return "A"
-        if final_score >= 0.60:
+        if final_score >= 0.70:
             return "B"
         if final_score >= 0.40:
             return "C"

@@ -122,6 +122,10 @@ class DiscoverAndAnalyzeUseCase:
                 cached += 1
                 continue
 
+            # Reset stuck reports (from crashed/timed-out previous calls) for clean retry
+            if existing_report and existing_report.status in ("downloading", "extracting", "analyzing"):
+                await self._reports_repo.update_status(existing_report.id, "pending")
+
             if processed_this_call >= req.max_reports:
                 break
 
